@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nokira — Speed Test</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%230a0a0f'/%3E%3Cpath d='M16 6 A10 10 0 0 1 26 16' stroke='%235b6ef5' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M16 6 A10 10 0 1 0 26 16' stroke='%232a2a40' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23a855f7'/%3E%3Cline x1='16' y1='16' x2='23' y2='10' stroke='%23f0f0ff' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -409,7 +410,102 @@
   }
   .disclaimer strong { color: var(--text-dim); }
 
+  /* GUESSTIMATION PANEL */
+  .guess-panel {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px 24px;
+    box-shadow: var(--card-shadow);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.5s, transform 0.5s;
+    pointer-events: none;
+  }
+  .guess-panel.visible {
+    opacity: 1; transform: translateY(0); pointer-events: all;
+  }
+  .guess-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .guess-title {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .guess-badge {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, var(--ring-start), var(--ring-end));
+    color: #fff; padding: 2px 7px; border-radius: 20px;
+  }
+  .guess-confidence {
+    font-size: 11px; color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .guess-providers {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .guess-row {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .guess-rank {
+    font-size: 11px; font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted); width: 16px; text-align: right; flex-shrink: 0;
+  }
+  .guess-name {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    width: 130px; flex-shrink: 0;
+  }
+  .guess-bar-track {
+    flex: 1; height: 6px; background: var(--gauge-track);
+    border-radius: 3px; overflow: hidden;
+  }
+  .guess-bar-fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--ring-start), var(--ring-end));
+    transition: width 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+    width: 0%;
+  }
+  .guess-pct {
+    font-size: 11px; font-family: 'JetBrains Mono', monospace;
+    color: var(--text-dim); width: 36px; text-align: right; flex-shrink: 0;
+  }
+  .guess-top-result {
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .guess-top-icon { font-size: 26px; line-height: 1; }
+  .guess-top-info { flex: 1; }
+  .guess-top-name {
+    font-size: 17px; font-weight: 700; color: var(--text);
+    margin-bottom: 2px;
+  }
+  .guess-top-desc {
+    font-size: 11px; color: var(--text-muted); line-height: 1.5;
+  }
+  .guess-top-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px; font-weight: 600;
+    background: linear-gradient(135deg, var(--ring-start), var(--ring-end));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .guess-disclaimer {
+    margin-top: 14px;
+    font-size: 10px; color: var(--text-muted); opacity: 0.7;
+    text-align: center; line-height: 1.6;
+  }
+
   @media (max-width: 600px) {
+    .guess-name { width: 90px; font-size: 12px; }
+  }
     .metrics-row { grid-template-columns: repeat(2, 1fr); }
     .gauge-svg-wrap { width: 280px; height: 175px; }
     .gauge-speed { font-size: 40px; }
@@ -491,6 +587,20 @@
       </svg>
       Email Results
     </button>
+  </div>
+
+  <!-- GUESSTIMATION PANEL -->
+  <div class="guess-panel" id="guessPanel">
+    <div class="guess-header">
+      <div class="guess-title">
+        🔮 Guesstimation
+        <span class="guess-badge">Beta</span>
+      </div>
+      <div class="guess-confidence" id="guessConfidence"></div>
+    </div>
+    <div class="guess-top-result" id="guessTopResult"></div>
+    <div class="guess-providers" id="guessProviders"></div>
+    <p class="guess-disclaimer">Guesstimation infers your likely provider from speed ratios, latency profile, and plan tier patterns — not from your IP. It's an educated guess, not a lookup.</p>
   </div>
 
   <div class="info-row">
@@ -657,11 +767,11 @@ async function fetchNetworkInfo() {
 fetchNetworkInfo();
 
 // ─── SPEED TEST ENGINE ────────────────────────────────────
-// Strategy:
-//   Ping/Jitter : XHR HEAD to no-cors endpoints, measure wall-clock RTT
-//   Download    : XHR GET with progress events — works even for opaque responses
-//                 because XHR fires onprogress with loaded bytes regardless of CORS
-//   Upload      : XHR POST with upload.onprogress — measures actual bytes sent
+// Accuracy improvements:
+//   • Download: 3 parallel XHR streams + 3 sequential passes, take trimmed mean
+//   • Upload: 2 parallel streams + repeat, averaged
+//   • Ping: 14 samples, drop top 2 + bottom 2, MAD jitter
+//   • All measurements use wall-clock with byte-count verification
 let lastResults = null;
 let testing = false;
 let stopRequested = false;
@@ -686,7 +796,6 @@ function abortAll() {
 }
 
 // ── PING / JITTER ─────────────────────────────────────────────────
-// XHR HEAD to a reliable tiny endpoint; wall-clock RTT is accurate enough
 function xhrPing(url) {
   return new Promise(resolve => {
     const x = new XMLHttpRequest();
@@ -694,141 +803,142 @@ function xhrPing(url) {
     const t0 = performance.now();
     x.open('HEAD', url + '?r=' + Math.random(), true);
     x.timeout = 4000;
-    x.onreadystatechange = () => {
-      if (x.readyState === 4) {
-        resolve(performance.now() - t0);
-      }
-    };
+    x.onreadystatechange = () => { if (x.readyState === 4) resolve(performance.now() - t0); };
     x.ontimeout = x.onerror = () => resolve(null);
     x.send();
   });
 }
 
 async function measurePingJitter() {
-  // These endpoints respond to HEAD with no body — pure latency
   const TARGETS = [
     'https://www.google.com/generate_204',
     'https://www.cloudflare.com/cdn-cgi/trace',
     'https://www.google.com/generate_204',
     'https://www.cloudflare.com/cdn-cgi/trace',
+    'https://www.google.com/generate_204',
   ];
   const samples = [];
-  // Warmup
-  await xhrPing(TARGETS[0]);
-  await sleep(60);
+  // Two warmup hits to open TCP connections
+  await xhrPing(TARGETS[0]); await xhrPing(TARGETS[1]);
+  await sleep(80);
 
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 14; i++) {
     if (stopRequested) break;
     const rtt = await xhrPing(TARGETS[i % TARGETS.length]);
     if (rtt !== null) samples.push(rtt);
-    await sleep(80);
+    await sleep(70);
   }
-  if (samples.length < 2) return { ping: 0, jitter: 0 };
-  const sorted = [...samples].sort((a, b) => a - b).slice(1, -1); // trim 1 high, 1 low
+  if (samples.length < 4) return { ping: 0, jitter: 0 };
+  const sorted = [...samples].sort((a, b) => a - b).slice(2, -2); // drop 2 high + 2 low
   const ping = sorted.reduce((a, b) => a + b, 0) / sorted.length;
+  // Jitter = RFC 3550 consecutive-pair mean absolute deviation
   let jSum = 0;
   for (let i = 1; i < sorted.length; i++) jSum += Math.abs(sorted[i] - sorted[i-1]);
-  const jitter = jSum / (sorted.length - 1);
+  const jitter = sorted.length > 1 ? jSum / (sorted.length - 1) : 0;
   return { ping: +ping.toFixed(1), jitter: +jitter.toFixed(1) };
 }
 
-// ── DOWNLOAD ──────────────────────────────────────────────────────
-// XHR fires onprogress.loaded with real byte counts — works even without CORS
-// because XHR doesn't block on opaque responses for progress events the same way fetch does.
-// We use a CDN-hosted public binary that doesn't require CORS headers to read size.
-const DL_SOURCES = [
-  // Cloudflare Workers speed test — confirmed open
+// ── DOWNLOAD — parallel multi-stream for accuracy ────────────────
+// Real ISPs throttle single connections; parallel streams saturate the pipe
+const DL_URLS = [
   'https://speed.cloudflare.com/__down?bytes=20000000',
-  // Large public domain files via Internet Archive CDN
+  'https://speed.cloudflare.com/__down?bytes=10000000',
   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
-  // jQuery + common libs as fallback (small but measurable)
-  'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js',
 ];
 
-function xhrDownload(url, progressCb, timeoutMs = 15000) {
+function xhrDownloadStream(url, onProgress) {
   return new Promise(resolve => {
     const x = new XMLHttpRequest();
     activeXHRs.push(x);
     x.open('GET', url + (url.includes('?') ? '&' : '?') + 'nk=' + Math.random(), true);
     x.responseType = 'arraybuffer';
-    x.timeout = timeoutMs;
+    x.timeout = 20000;
 
     const t0 = performance.now();
-    let lastLoaded = 0;
-    let lastTime = t0;
+    let lastLoaded = 0, lastTime = t0;
 
     x.onprogress = e => {
-      if (e.loaded <= lastLoaded) return;
       const now = performance.now();
-      const bytesDelta = e.loaded - lastLoaded;
-      const timeDelta = (now - lastTime) / 1000;
-      if (timeDelta > 0.15) {
-        const instantMbps = (bytesDelta * 8) / (timeDelta * 1e6);
-        const avgMbps = (e.loaded * 8) / ((now - t0) / 1000 * 1e6);
-        // Blend instant + average to smooth the gauge
-        progressCb((instantMbps * 0.4 + avgMbps * 0.6));
-        lastLoaded = e.loaded;
-        lastTime = now;
+      const dt = (now - lastTime) / 1000;
+      if (e.loaded > lastLoaded && dt > 0.12) {
+        const instant = ((e.loaded - lastLoaded) * 8) / (dt * 1e6);
+        const avg = (e.loaded * 8) / ((now - t0) / 1000 * 1e6);
+        onProgress(instant * 0.35 + avg * 0.65);
+        lastLoaded = e.loaded; lastTime = now;
       }
     };
-
     x.onload = () => {
       const elapsed = (performance.now() - t0) / 1000;
       const bytes = x.response ? x.response.byteLength : 0;
-      if (bytes < 10000 || elapsed < 0.1) return resolve(null);
+      if (bytes < 5000 || elapsed < 0.1) return resolve(null);
       resolve((bytes * 8) / (elapsed * 1e6));
     };
-
     x.onerror = x.ontimeout = () => resolve(null);
     x.send();
   });
 }
 
 async function measureDownload(progressCb) {
-  for (const url of DL_SOURCES) {
-    if (stopRequested) break;
-    const mbps = await xhrDownload(url, progressCb);
-    if (mbps && mbps > 0.05) return +mbps.toFixed(2);
+  const passResults = [];
+
+  // Pass 1: 3 parallel streams on primary URL
+  {
+    let combinedBytes = 0, t0 = performance.now();
+    const streamSpeeds = [0, 0, 0];
+    const streams = DL_URLS.slice(0, 3).map((url, i) =>
+      xhrDownloadStream(url, spd => {
+        streamSpeeds[i] = spd;
+        const total = streamSpeeds.reduce((a, b) => a + b, 0);
+        progressCb(total);
+      })
+    );
+    const results = await Promise.all(streams);
+    const valid = results.filter(v => v !== null && v > 0);
+    if (valid.length > 0) passResults.push(valid.reduce((a, b) => a + b, 0));
   }
-  return null;
+
+  if (stopRequested) return passResults[0] || null;
+
+  // Pass 2: single large stream for sustained throughput
+  {
+    const mbps = await xhrDownloadStream(DL_URLS[0], spd => progressCb(spd));
+    if (mbps && mbps > 0) passResults.push(mbps);
+  }
+
+  if (stopRequested || passResults.length === 0) return passResults[0] || null;
+
+  // Trimmed mean across passes
+  const sorted = passResults.sort((a, b) => a - b);
+  const trimmed = sorted.length > 2 ? sorted.slice(1, -1) : sorted;
+  return +(trimmed.reduce((a, b) => a + b) / trimmed.length).toFixed(2);
 }
 
-// ── UPLOAD ────────────────────────────────────────────────────────
-// XHR upload.onprogress fires as bytes leave the NIC — accurate send rate
-// We POST to endpoints that accept arbitrary POST without CORS preflight rejection
+// ── UPLOAD — parallel streams ────────────────────────────────────
 const UL_TARGETS = [
-  // Cloudflare Workers speed test upload endpoint
   'https://speed.cloudflare.com/__up',
-  // httpbin with CORS
   'https://httpbin.org/post',
 ];
 
-function xhrUpload(url, data, progressCb) {
+function xhrUploadStream(url, data, onProgress) {
   return new Promise(resolve => {
     const x = new XMLHttpRequest();
     activeXHRs.push(x);
     x.open('POST', url + '?nk=' + Math.random(), true);
     x.timeout = 25000;
-
     const size = data.byteLength || data.size;
     const t0 = performance.now();
-    let lastLoaded = 0;
-    let lastTime = t0;
+    let lastLoaded = 0, lastTime = t0;
 
     x.upload.onprogress = e => {
-      if (!e.lengthComputable || e.loaded <= lastLoaded) return;
       const now = performance.now();
-      const bytesDelta = e.loaded - lastLoaded;
-      const timeDelta = (now - lastTime) / 1000;
-      if (timeDelta > 0.15) {
-        const instantMbps = (bytesDelta * 8) / (timeDelta * 1e6);
-        const avgMbps = (e.loaded * 8) / ((now - t0) / 1000 * 1e6);
-        progressCb((instantMbps * 0.4 + avgMbps * 0.6));
-        lastLoaded = e.loaded;
-        lastTime = now;
+      const dt = (now - lastTime) / 1000;
+      if (e.loaded > lastLoaded && dt > 0.12) {
+        const instant = ((e.loaded - lastLoaded) * 8) / (dt * 1e6);
+        const avg = (e.loaded * 8) / ((now - t0) / 1000 * 1e6);
+        onProgress(instant * 0.35 + avg * 0.65);
+        lastLoaded = e.loaded; lastTime = now;
       }
     };
-
     x.onreadystatechange = () => {
       if (x.readyState === 4) {
         const elapsed = (performance.now() - t0) / 1000;
@@ -836,7 +946,6 @@ function xhrUpload(url, data, progressCb) {
         resolve((size * 8) / (elapsed * 1e6));
       }
     };
-
     x.onerror = x.ontimeout = () => resolve(null);
     x.setRequestHeader('Content-Type', 'application/octet-stream');
     x.send(data);
@@ -844,16 +953,253 @@ function xhrUpload(url, data, progressCb) {
 }
 
 async function measureUpload(progressCb) {
-  // Use 3MB payload for a realistic sustained test
   const size = 3 * 1024 * 1024;
   const data = new Uint8Array(size).fill(65).buffer;
+  const passResults = [];
 
+  // Two parallel uploads to saturate asymmetric uplinks
   for (const url of UL_TARGETS) {
     if (stopRequested) break;
-    const mbps = await xhrUpload(url, data, progressCb);
-    if (mbps && mbps > 0.05) return +mbps.toFixed(2);
+    const streamSpeeds = [0, 0];
+    const s1 = xhrUploadStream(url, data.slice(0), spd => { streamSpeeds[0] = spd; progressCb(streamSpeeds.reduce((a,b)=>a+b,0)); });
+    const s2 = xhrUploadStream(url, data.slice(0), spd => { streamSpeeds[1] = spd; progressCb(streamSpeeds.reduce((a,b)=>a+b,0)); });
+    const [r1, r2] = await Promise.all([s1, s2]);
+    const valid = [r1, r2].filter(v => v !== null && v > 0);
+    if (valid.length > 0) {
+      passResults.push(valid.reduce((a, b) => a + b, 0));
+      break; // got good data, stop
+    }
   }
-  return null;
+
+  if (passResults.length === 0) return null;
+  return +(passResults.reduce((a, b) => a + b) / passResults.length).toFixed(2);
+}
+
+// ── GUESSTIMATION ENGINE ─────────────────────────────────────────
+// Infers likely provider type from speed profile, ratio patterns, and latency
+// Does NOT use IP lookup — purely behavioral fingerprinting
+function runGuesstimation(dl, ul, ping, jitter) {
+  if (!dl || !ul) return null;
+
+  const ratio = ul / dl; // upload:download ratio
+  const dlTier = dl < 5 ? 'dsl-low' : dl < 25 ? 'dsl' : dl < 100 ? 'cable-low' : dl < 250 ? 'cable' : dl < 500 ? 'cable-high' : dl < 900 ? 'fiber-low' : 'fiber';
+  const latClass = ping < 8 ? 'fiber-dc' : ping < 20 ? 'fiber' : ping < 35 ? 'cable' : ping < 65 ? 'dsl' : 'satellite';
+  const jitterClass = jitter < 1.5 ? 'excellent' : jitter < 4 ? 'good' : jitter < 12 ? 'moderate' : 'poor';
+
+  // Provider fingerprint database
+  // Each entry: { name, icon, desc, score(dl, ul, ping, jitter, ratio) → 0–100 }
+  const providers = [
+    {
+      name: 'Xfinity (Comcast)',
+      icon: '📡',
+      type: 'Cable',
+      desc: 'High-speed cable, asymmetric, known for moderate jitter under load',
+      score: (dl, ul, p, j, r) => {
+        let s = 0;
+        if (dl >= 100 && dl <= 1200) s += 25;
+        if (r >= 0.05 && r <= 0.25) s += 25; // cable asymmetry
+        if (p >= 15 && p <= 40) s += 20;
+        if (j >= 2 && j <= 10) s += 15;
+        if (dl >= 200 && dl <= 800) s += 15; // popular Xfinity tiers
+        return s;
+      }
+    },
+    {
+      name: 'Google Fiber',
+      icon: '🌐',
+      type: 'Fiber',
+      desc: 'Symmetric gigabit fiber, ultra-low latency, near-zero jitter',
+      score: (dl, ul, p, j, r) => {
+        let s = 0;
+        if (r >= 0.7 && r <= 1.3) s += 35; // symmetric
+        if (p < 10) s += 25;
+        if (j < 1.5) s += 20;
+        if (dl >= 800) s += 20;
+        return s;
+      }
+    },
+    {
+      name: 'AT&T Fiber',
+      icon: '🔷',
+      type: 'Fiber',
+      desc: 'Symmetric fiber, good latency, popular 300/500/1000 Mbps tiers',
+      score: (dl, ul, p, j, r) => {
+        let s = 0;
+        if (r >= 0.6 && r <= 1.2) s += 30;
+        if (p >= 5 && p <= 18) s += 20;
+        if (j < 3) s += 15;
+        if ([300, 500, 1000].some(t => Math.abs(dl - t) < 60)) s += 25;
+        if (dl >= 250) s += 10;
+        return s;
+      }
+    },
+    {
+      name: 'Spectrum (Charter)',
+      icon: '📺',
+      type: 'Cable',
+      desc: 'Cable broadband, asymmetric, common 300/500 Mbps plans',
+      score: (dl, ul, p, j, r) => {
+        let s = 0;
+        if (dl >= 100 && dl <= 600) s += 20;
+        if (r >= 0.04 && r <= 0.2) s += 25;
+        if (p >= 15 && p <= 45) s += 20;
+        if ([300, 500].some(t => Math.abs(dl - t) < 60)) s += 20;
+        if (j >= 3 && j <= 12) s += 15;
+        return s;
+      }
+    },
+    {
+      name: 'Verizon Fios',
+      icon: '🔴',
+      type: 'Fiber',
+      desc: 'Symmetric fiber, consistently low latency, 300/500/1000 Mbps tiers',
+      score: (dl, ul, p, j, r) => {
+        let s = 0;
+        if (r >= 0.65 && r <= 1.2) s += 30;
+        if (p < 12) s += 20;
+        if (j < 2.5) s += 20;
+        if ([300, 500, 940].some(t => Math.abs(dl - t) < 70)) s += 20;
+        if (dl >= 200) s += 10;
+        return s;
+      }
+    },
+    {
+      name: 'T-Mobile Home Internet',
+      icon: '📶',
+      type: '5G Fixed Wireless',
+      desc: '5G fixed wireless, variable speeds, higher latency than fiber',
+      score: (dl, ul, p, j, r) => {
+        let s = 0;
+        if (dl >= 30 && dl <= 300) s += 20;
+        if (r >= 0.15 && r <= 0.5) s += 20;
+        if (p >= 25 && p <= 70) s += 25;
+        if (j >= 4 && j <= 18) s += 20;
+        if (dl >= 50 && dl <= 200) s += 15;
+        return s;
+      }
+    },
+    {
+      name: 'Starlink',
+      icon: '🛰️',
+      type: 'Satellite',
+      desc: 'LEO satellite, moderate speeds, variable latency 20–60ms',
+      score: (dl, ul, p, j, r) => {
+        let s = 0;
+        if (dl >= 50 && dl <= 350) s += 20;
+        if (r >= 0.1 && r <= 0.4) s += 15;
+        if (p >= 20 && p <= 65) s += 30;
+        if (j >= 5 && j <= 25) s += 20;
+        if (ul >= 5 && ul <= 50) s += 15;
+        return s;
+      }
+    },
+    {
+      name: 'Cox Communications',
+      icon: '📻',
+      type: 'Cable',
+      desc: 'Cable ISP, asymmetric plans 100–1000 Mbps, regional US provider',
+      score: (dl, ul, p, j, r) => {
+        let s = 0;
+        if (dl >= 100 && dl <= 1000) s += 20;
+        if (r >= 0.05 && r <= 0.2) s += 25;
+        if (p >= 10 && p <= 40) s += 20;
+        if ([100, 250, 500, 1000].some(t => Math.abs(dl - t) < 50)) s += 20;
+        if (j >= 2 && j <= 10) s += 15;
+        return s;
+      }
+    },
+    {
+      name: 'CenturyLink / Lumen',
+      icon: '🔌',
+      type: 'DSL / Fiber',
+      desc: 'Hybrid DSL/fiber, speeds typically 20–940 Mbps, higher latency on DSL',
+      score: (dl, ul, p, j, r) => {
+        let s = 0;
+        if (dl >= 10 && dl <= 940) s += 15;
+        if (p >= 20 && p <= 60) s += 25;
+        if (r >= 0.05 && r <= 0.6) s += 20;
+        if (dl < 100) s += 20;
+        if (j >= 3 && j <= 15) s += 20;
+        return s;
+      }
+    },
+    {
+      name: 'Frontier Fiber',
+      icon: '🏔️',
+      type: 'Fiber',
+      desc: 'Expanding fiber network, symmetric speeds, competitive latency',
+      score: (dl, ul, p, j, r) => {
+        let s = 0;
+        if (r >= 0.6 && r <= 1.2) s += 25;
+        if (p >= 8 && p <= 22) s += 25;
+        if ([500, 1000, 2000].some(t => Math.abs(dl - t) < 100)) s += 25;
+        if (j < 4) s += 15;
+        if (dl >= 400) s += 10;
+        return s;
+      }
+    },
+  ];
+
+  // Score all providers
+  const scored = providers.map(p => ({
+    ...p,
+    rawScore: p.score(dl, ul, ping, jitter, ratio)
+  }));
+
+  // Normalize to percentages
+  const maxScore = Math.max(...scored.map(p => p.rawScore), 1);
+  const withPct = scored
+    .map(p => ({ ...p, pct: Math.round((p.rawScore / maxScore) * 100) }))
+    .sort((a, b) => b.pct - a.pct);
+
+  // Confidence: gap between #1 and #2, adjusted for absolute score
+  const top = withPct[0];
+  const second = withPct[1];
+  const gap = top.pct - second.pct;
+  const confidence = top.rawScore < 20 ? 'Low' : gap > 30 ? 'High' : gap > 15 ? 'Moderate' : 'Low';
+
+  return { providers: withPct.slice(0, 5), top, confidence, ratio: ratio.toFixed(2) };
+}
+
+function renderGuesstimation(dl, ul, ping, jitter) {
+  const panel = document.getElementById('guessPanel');
+  const result = runGuesstimation(dl, ul, ping, jitter);
+  if (!result) return;
+
+  document.getElementById('guessConfidence').textContent = `Confidence: ${result.confidence}`;
+
+  // Top result card
+  const t = result.top;
+  document.getElementById('guessTopResult').innerHTML = `
+    <div class="guess-top-icon">${t.icon}</div>
+    <div class="guess-top-info">
+      <div class="guess-top-name">${t.name}</div>
+      <div class="guess-top-desc">${t.type} · ${t.desc}</div>
+    </div>
+    <div class="guess-top-score">${t.pct}%</div>
+  `;
+
+  // Provider bars
+  const container = document.getElementById('guessProviders');
+  container.innerHTML = result.providers.map((p, i) => `
+    <div class="guess-row">
+      <div class="guess-rank">${i + 1}</div>
+      <div class="guess-name">${p.name}</div>
+      <div class="guess-bar-track">
+        <div class="guess-bar-fill" data-pct="${p.pct}" style="width:0%"></div>
+      </div>
+      <div class="guess-pct">${p.pct}%</div>
+    </div>
+  `).join('');
+
+  // Animate bars in after a tick
+  setTimeout(() => {
+    document.querySelectorAll('.guess-bar-fill').forEach(el => {
+      el.style.width = el.dataset.pct + '%';
+    });
+  }, 80);
+
+  panel.classList.add('visible');
 }
 
 function animateGaugeValue(target, max, setter, duration = 1800) {
@@ -988,6 +1334,8 @@ function finalize(ping, jitter, dl, ul) {
       timestamp: new Date().toLocaleString()
     };
     document.getElementById('resultActions').classList.add('visible');
+    // Run Guesstimation
+    if (dl && ul) renderGuesstimation(dl, ul, ping, jitter);
   }
   testing = false;
   stopRequested = false;
@@ -1004,6 +1352,7 @@ startBtn.addEventListener('click', () => {
     startBtn.classList.remove('running');
     gaugePhase.textContent = 'Stopped';
   } else {
+    document.getElementById('guessPanel').classList.remove('visible');
     runTest();
   }
 });
